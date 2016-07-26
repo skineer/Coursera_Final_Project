@@ -11,7 +11,7 @@ badWords <- readLines("http://www.cs.cmu.edu/~biglou/resources/bad-words.txt",
                       warn = FALSE)
 
 cleanTheData <- function(data) {
-    cont           <- 0
+    cont           <- 1
     removeAfter    <- c()
     loweredData    <- tolower(data)
     removePunc     <- removePunctuation(loweredData)
@@ -19,7 +19,8 @@ cleanTheData <- function(data) {
     tokenizedData  <- MC_tokenizer(removeBadWords)
     for(i in length(tokenizedData)){
         if(grepl('http://', tokenizedData[i]) == TRUE){
-           removeAfter[i] <- tokenizedData[i]  
+           removeAfter[cont] <- tokenizedData[i]
+           cont = cont + 1
         }
     }
     tokenizedData <- removeWords(tokenizedData, removeAfter)
