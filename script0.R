@@ -6,7 +6,6 @@
 # https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip  #
 ####################################################################################
 
-library(tm)
 setwd("C:\\Users\\Renato\\Capstone Project\\data\\final")
 
 # load all languages blogs sentences:
