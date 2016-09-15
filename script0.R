@@ -9,7 +9,7 @@
 library(tm)
 library(RWeka)
 
-setwd("/home/skineer/Coursera_Final_Project/final/")
+setwd("C:\\Users\\lc43922\\Coursera_Final_Project\\final")
 
 # load all languages blogs sentences:
 #blog_de <- readLines("de_DE/de_DE.blogs.txt", warn = FALSE)
@@ -29,9 +29,9 @@ twitter_us <- readLines("en_US/en_US.twitter.txt", warn = FALSE)
 #twitter_fi <- readLines("fi_FI/fi_FI.twitter.txt", warn = FALSE)
 #twitter_ru <- readLines("ru_RU/ru_RU.twitter.txt", warn = FALSE)
 
-sampleEnglishOnly <- c(sample(blog_us, length(blog_us) * 0.0003),
-                       sample(news_us, length(news_us) * 0.0003),
-                       sample(twitter_us, length(twitter_us) * 0.0003))
+sampleEnglishOnly <- c(sample(blog_us, length(blog_us) * 0.01),
+                       sample(news_us, length(news_us) * 0.01),
+                       sample(twitter_us, length(twitter_us) * 0.01))
 
 # remove punctuation, lower the words, remove numbers, remove whitespaces ...
 dealWithWords <- function(charInput){
