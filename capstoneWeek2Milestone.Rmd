@@ -1,0 +1,111 @@
+---
+title: "Capstone Project - Week 2 - Milestone"
+author: "Renato Pedroso"
+date: "16 September 2016"
+output: html_document
+---
+
+## Swiftkey Dataset Exploratory Analysis  
+
+### Synopsis  
+The objective of this report is to show some simple exploratory analysis and strategy to construct the final predictive model app and algorithm.  
+The raw zip dataset can be downloaded [here](https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip).  
+
+### Data Processing
+The data is from Swiftkey and contains 3 extractions, for 4 languages. The extractions are from:  
+ * Blogs  
+ * News  
+ * Twitter  
+
+The raw dataset contains the following basic informations:  
+```{r}
+library("tm")
+setwd("C:\\Users\\lc43922\\Coursera_Final_Project\\final")
+
+blog_us <- readLines("en_US/en_US.blogs.txt", warn = FALSE)
+news_us <- readLines("en_US/en_US.news.txt", warn = FALSE)
+twitter_us <- readLines("en_US/en_US.twitter.txt", warn = FALSE)
+blog_us <- iconv(blog_us, "latin1", "ASCII", sub="")
+news_us <- iconv(news_us, "latin1", "ASCII", sub="")
+twitter_us <- iconv(twitter_us, "latin1", "ASCII", sub="")
+
+
+# do some simple exploratory analysis
+# line count
+blogsLineCount <- length(blog_us)
+newsLineCount <- length(news_us)
+twitterLineCount <- length(twitter_us)
+# word count
+blogsWordCount <- sum(sapply(gregexpr("\\W+", blog_us), length) + 1)
+newsWordCount <- sum(sapply(gregexpr("\\W+", news_us), length) + 1)
+twitterWordCount <- sum(sapply(gregexpr("\\W+", twitter_us), length) + 1)
+
+
+exploratoryAnalysis <- data.frame(File = c("Blogs","News","Twitter"),
+                                  Line_Count = c(blogsLineCount, newsLineCount, twitterLineCount),
+                                  Word_Count = c(blogsWordCount, newsWordCount, twitterWordCount))
+exploratoryAnalysis
+```
+
+### Clean the data and tokenize  
+To transform the raw dataset in a separate word variable we must tokenize it. We will do this process, using the TM library, and construct NGRAMS, where N is equal to the quantity of grouped words. For example, consider the string "THIS IS A TEST", the 1GRAM for it would be "THIS","IS", "A", TEST. The 2GRAM would be "THIS IS", "IS A", "A TEST" and so on.  
+Before this transformation we must clean the dataset, in order to remove punctioations, translate no english characters in english characters, remove the spaces and so on ...  
+
+To speed up the things we will get a sample of 1% of the three datasets, blogs, news and twitter. 
+```{r}
+library(RWeka)
+# remove punctuation, lower the words, remove numbers, remove whitespaces ...
+dealWithWords <- function(charInput){
+  #charInput --> Type large character
+  charInputVectorized <- VCorpus(VectorSource(charInput))
+  charInputVectorized <- tm_map(charInputVectorized, tolower)
+  charInputVectorized <- tm_map(charInputVectorized, removePunctuation)
+  charInputVectorized <- tm_map(charInputVectorized, removeNumbers)
+  charInputVectorized <- tm_map(charInputVectorized, stripWhitespace)
+  charInputVectorized <- tm_map(charInputVectorized, PlainTextDocument)
+}
+
+nGramMaker1 <- function(charVectorized, n = 1){
+  #charVectorize --> Type TM Vectorize (Large Character)
+  #n             --> The size of the NGRAM
+  tokenizer <- NGramTokenizer(charVectorized, Weka_control(min = n, max = n))
+}
+
+nGramMaker2 <- function(charVectorized, n = 2){
+  #charVectorize --> Type TM Vectorize (Large Character)
+  #n             --> The size of the NGRAM
+  tokenizer <- NGramTokenizer(charVectorized, Weka_control(min = n, max = n))
+}
+
+nGramMaker3 <- function(charVectorized, n = 3){
+  #charVectorize --> Type TM Vectorize (Large Character)
+  #n             --> The size of the NGRAM
+  tokenizer <- NGramTokenizer(charVectorized, Weka_control(min = n, max = n))
+}
+
+wordCountVector<- function(vector, searchOn){
+  # this function receive a vector of words or ngrams and count the ocurrencies on the "search on"
+  # vector --> a vector of words or ngrams (already tokenized)
+  # searchOn --> data frame, matrix, large character types to search the ocurrencies of words
+  # return   --> return a data frame with 2 columns. Word and Ocurrencies
+  wordCountDF <- data.frame(word=character(length(vector)), 
+                            ocurrencies = integer(length(vector)), stringsAsFactors = FALSE)
+  for (i in 1:length(vector)){
+    wordVector = vector[i]
+    wordCountDF$word[i] <- wordVector
+    search <- paste("\\",wordVector,"\\>", sep = '')
+    numOcurrences <- length(grep(paste("\\<",wordVector,"\\>", sep = ''), searchOn))
+    wordCountDF$ocurrencies[i] <- numOcurrences
+  }
+  return(wordCountDF)
+}
+set.seed(999)
+sampleEnglishOnly <- c(sample(blog_us, length(blog_us) * 0.01),
+                       sample(news_us, length(news_us) * 0.01),
+                       sample(twitter_us, length(twitter_us) * 0.01))
+englishWordsVectorized <- dealWithWords(sampleEnglishOnly)
+gram1 <- TermDocumentMatrix(englishWordsVectorized, control = list(tokenize = nGramMaker1))
+gram2 <- TermDocumentMatrix(englishWordsVectorized, control = list(tokenize = nGramMaker2))
+gram3 <- TermDocumentMatrix(englishWordsVectorized, control = list(tokenize = nGramMaker3))
+
+```
