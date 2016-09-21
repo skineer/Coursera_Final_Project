@@ -48,12 +48,12 @@ exploratoryAnalysis
 ```
 
 ### Clean the data and tokenize  
-To transform the raw dataset in a separate word variable we must tokenize it. We will do this process, using the TM library, and construct NGRAMS, where N is equal to the quantity of grouped words. For example, consider the string "THIS IS A TEST", the 1GRAM for it would be "THIS","IS", "A", TEST. The 2GRAM would be "THIS IS", "IS A", "A TEST" and so on.  
+To transform the raw dataset in a separate words variable we must tokenize it. We will do this process, using the TM library, and construct NGRAMS, where N is equal to the quantity of grouped words. For example, consider the string "THIS IS A TEST", the 1GRAM for it would be "THIS","IS", "A", TEST. The 2GRAM would be "THIS IS", "IS A", "A TEST" and so on.  
 Before this transformation we must clean the dataset, in order to remove punctioations, translate no english characters in english characters, remove the spaces and so on ...  
 
-To speed up the things we will get a sample of 1% of the three datasets, blogs, news and twitter. 
+To speed up the things we will get a sample of 1% of the three datasets (blogs, news and twitter).   
 ```{r}
-library(RWeka)
+library("RWeka")
 # remove punctuation, lower the words, remove numbers, remove whitespaces ...
 dealWithWords <- function(charInput){
   #charInput --> Type large character
@@ -107,5 +107,46 @@ englishWordsVectorized <- dealWithWords(sampleEnglishOnly)
 gram1 <- TermDocumentMatrix(englishWordsVectorized, control = list(tokenize = nGramMaker1))
 gram2 <- TermDocumentMatrix(englishWordsVectorized, control = list(tokenize = nGramMaker2))
 gram3 <- TermDocumentMatrix(englishWordsVectorized, control = list(tokenize = nGramMaker3))
+# only get frequencies greater than 100
+gram1Filtered <- findFreqTerms(gram1, lowfreq = 100)
+gram2Filtered <- findFreqTerms(gram2, lowfreq = 100)
+gram3Filtered <- findFreqTerms(gram3, lowfreq = 100)
+
+wordCountGram1 <- wordCountVector(gram1Filtered, sampleEnglishOnly)
+wordCountGram2 <- wordCountVector(gram2Filtered, sampleEnglishOnly)
+wordCountGram3 <- wordCountVector(gram3Filtered, sampleEnglishOnly)
 
 ```
+
+### Plots  
+We can make some plots to visualize the distribution and frequencies of the tokens found.  
+
+```{r}
+library(dplyr)
+library(gridExtra)
+library(ggplot2)
+wordCountGram1Top10 <- head(arrange(wordCountGram1, desc(ocurrencies)), n = 10)
+wordCountGram2Top10 <- head(arrange(wordCountGram2, desc(ocurrencies)), n = 10)
+wordCountGram3Top10 <- head(arrange(wordCountGram3, desc(ocurrencies)), n = 10)
+#construct the plot using ggplot2
+g1 <- ggplot(wordCountGram1Top10, aes(x=reorder(word, -ocurrencies),y=ocurrencies)) + 
+        geom_bar(stat="identity", fill="blue") + 
+        ggtitle("Unigram") + 
+        xlab("Unigrams") + ylab("Count") + 
+        theme(axis.text.x=element_text(angle=90, hjust=1))
+g2 <- ggplot(wordCountGram2Top10, aes(x=reorder(word, -ocurrencies),y=ocurrencies)) + 
+        geom_bar(stat="identity", fill="red") + 
+        ggtitle("Bigram") + 
+        xlab("Bigrams") + ylab("Count") + 
+        theme(axis.text.x=element_text(angle=90, hjust=1))
+g3 <- ggplot(wordCountGram3Top10, aes(x=reorder(word, -ocurrencies),y=ocurrencies)) + 
+        geom_bar(stat="identity", fill="black") + 
+        ggtitle("Trigram") + 
+        xlab("Trigrams") + ylab("Count") + 
+        theme(axis.text.x=element_text(angle=90, hjust=1))
+gridExtra::grid.arrange(g1, g2, g3, ncol = 3)
+```
+
+### Next Steps  
+Now we are ready to develop the model by itself, using the tokens and the corpus that we have already built.  
+After the model we will start to develop the data product, using Shiny, and expose this to the world.  
