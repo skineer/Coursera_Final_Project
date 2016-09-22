@@ -61,6 +61,21 @@ wordCountVector<- function(vector, searchOn, gramNumber, gramFull){
     if (gramNumber == 1){
       wordCountDF$probability[i] <- wordCountDF$ocurrencies[i] / V
     }
+    if (gramNumber == 2){
+      wi <- strsplit(wordVector, ' ')[[1]][[1]]
+      wi_1 <- strsplit(wordVector, ' ')[[1]][[2]]
+      numOcurrencesAll <- length(grep(paste("\\<",wordVector,"\\>", sep = ''), searchOn))
+      numOcurrenceswi1 <- length(grep(paste("\\<",wi_1,"\\>", sep = ''), searchOn))
+      wordCountDF$probability[i] <- (numOcurrencesAll + 1) / (numOcurrenceswi1 + V)
+    }
+    if (gramNumber == 3){
+      wi <- strsplit(wordVector, ' ')[[1]][[1]]
+      wi_1 <- strsplit(wordVector, ' ')[[1]][[2]]
+      wi_2 <- strsplit(wordVector, ' ')[[1]][[3]]
+      numOcurrencesAll <- length(grep(paste("\\<",wordVector,"\\>", sep = ''), searchOn))
+      numOcurrenceswi1wi2 <- length(grep(paste("\\<",wi_1,' ',wi_2,"\\>", sep = ''), searchOn))
+      wordCountDF$probability[i] <- (numOcurrencesAll + 1) / (numOcurrenceswi1wi2 + V)
+    }
     
   }
   return(wordCountDF)
@@ -91,21 +106,23 @@ news_us <- iconv(news_us, "latin1", "ASCII", sub="")
 twitter_us <- iconv(twitter_us, "latin1", "ASCII", sub="")
 
 set.seed(999)
-sampleEnglishOnly <- c(sample(blog_us, length(blog_us) * 0.01),
-                       sample(news_us, length(news_us) * 0.01),
-                       sample(twitter_us, length(twitter_us) * 0.01))
+sampleEnglishOnly <- c(sample(blog_us, length(blog_us) * 0.1),
+                       sample(news_us, length(news_us) * 0.1),
+                       sample(twitter_us, length(twitter_us) * 0.1))
 
 englishWordsVectorized <- dealWithWords(sampleEnglishOnly)
 gram1 <- TermDocumentMatrix(englishWordsVectorized, control = list(tokenize = nGramMaker1))
 gram2 <- TermDocumentMatrix(englishWordsVectorized, control = list(tokenize = nGramMaker2))
 gram3 <- TermDocumentMatrix(englishWordsVectorized, control = list(tokenize = nGramMaker3))
 
-gram1Filtered <- findFreqTerms(gram1,lowfreq = 50)
-gram2Filtered <- findFreqTerms(gram2,lowfreq = 50)
-gram3Filtered <- findFreqTerms(gram3,lowfreq = 50)
+gram1Filtered <- findFreqTerms(gram1,lowfreq = 20)
+gram2Filtered <- findFreqTerms(gram2,lowfreq = 20)
+gram3Filtered <- findFreqTerms(gram3,lowfreq = 20)
 
 wordCountProbGram1 <- wordCountVector(gram1Filtered, sampleEnglishOnly, gramNumber = 1, gramFull = gram1)
 wordCountProbGram2 <- wordCountVector(gram2Filtered, sampleEnglishOnly, gramNumber = 2, gramFull = gram2)
 wordCountProbGram3 <- wordCountVector(gram3Filtered, sampleEnglishOnly, gramNumber = 3, gramFull = gram3)
 
-
+save(wordCountProbGram1, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram1.RData")
+save(wordCountProbGram2, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram2.RData")
+save(wordCountProbGram3, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram3.RData")
