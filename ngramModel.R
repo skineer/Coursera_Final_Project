@@ -115,9 +115,9 @@ gram1 <- TermDocumentMatrix(englishWordsVectorized, control = list(tokenize = nG
 gram2 <- TermDocumentMatrix(englishWordsVectorized, control = list(tokenize = nGramMaker2))
 gram3 <- TermDocumentMatrix(englishWordsVectorized, control = list(tokenize = nGramMaker3))
 
-gram1Filtered <- findFreqTerms(gram1,lowfreq = 20)
-gram2Filtered <- findFreqTerms(gram2,lowfreq = 20)
-gram3Filtered <- findFreqTerms(gram3,lowfreq = 20)
+gram1Filtered <- findFreqTerms(gram1,lowfreq = 1)
+gram2Filtered <- findFreqTerms(gram2,lowfreq = 1)
+gram3Filtered <- findFreqTerms(gram3,lowfreq = 1)
 
 wordCountProbGram1 <- wordCountVector(gram1Filtered, sampleEnglishOnly, gramNumber = 1, gramFull = gram1)
 wordCountProbGram2 <- wordCountVector(gram2Filtered, sampleEnglishOnly, gramNumber = 2, gramFull = gram2)
