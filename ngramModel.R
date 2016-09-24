@@ -38,42 +38,50 @@ nGramMaker3 <- function(charVectorized, n = 3){
   tokenizer <- NGramTokenizer(charVectorized, Weka_control(min = n, max = n))
 }
 
-wordCountVector<- function(vector, searchOn, gramNumber, gramFull){
+wordCountVector<- function(gramNumber, gramFull){
   # this function receive a vector of words and count the ocurrencies on the "search on"
   # also calculates the probability, using Markov Chains with add-1 smooth
   # to predict words the backoff model needs to be implemented as well
   # based on https://www.r-bloggers.com/natural-language-processing-what-would-shakespeare-say/
-  # vector     --> a vector of words or ngrams (already tokenized)
-  # searchOn   --> data frame, matrix, large character types to search the ocurrencies of words
   # gramNumber --> size of the gram (1 = unigram, 2 = bigram, 3 = trigram)
   # gramFull   --> original constructed ngram to get the V for smoothing
   # return      --> return a data frame with 3 columns. Word, Ocurrencies, probability
-  wordCountDF <- data.frame(word=character(length(vector)), 
-                            ocurrencies = integer(length(vector)),
-                            probability = numeric(length(vector)), stringsAsFactors = FALSE)
   V = gramFull$nrow
-  for (i in 1:length(vector)){
-    wordVector = vector[i]
+  count <- slam::row_sums(gramFull)
+  namesGram <- names(count)
+  wordCountDF <- data.frame(word=character(V), 
+                            ocurrencies = integer(V),
+                            probability = numeric(V), stringsAsFactors = FALSE)
+  for (i in 1:V){
+    wordVector = namesGram[i]
     wordCountDF$word[i] <- wordVector
-    search <- paste("\\",wordVector,"\\>", sep = '')
-    numOcurrences <- length(grep(paste("\\<",wordVector,"\\>", sep = ''), searchOn))
+    numOcurrences <- count[[i]]
     wordCountDF$ocurrencies[i] <- numOcurrences
     if (gramNumber == 1){
       wordCountDF$probability[i] <- wordCountDF$ocurrencies[i] / V
     }
     if (gramNumber == 2){
-      wi <- strsplit(wordVector, ' ')[[1]][[1]]
+      wordVector = namesGram[i]
+      #wi <- strsplit(wordVector, ' ')[[1]][[1]]
       wi_1 <- strsplit(wordVector, ' ')[[1]][[2]]
-      numOcurrencesAll <- length(grep(paste("\\<",wordVector,"\\>", sep = ''), searchOn))
-      numOcurrenceswi1 <- length(grep(paste("\\<",wi_1,"\\>", sep = ''), searchOn))
+      numOcurrencesAll <- count[[i]]
+      numOcurrenceswi1 <- wordCountProbGram1[wordCountProbGram1$word == wi_1,]$ocurrencies
+      if (is.integer(numOcurrenceswi1) == FALSE) {
+        numOcurrenceswi1 = 0
+      }
       wordCountDF$probability[i] <- (numOcurrencesAll + 1) / (numOcurrenceswi1 + V)
     }
     if (gramNumber == 3){
-      wi <- strsplit(wordVector, ' ')[[1]][[1]]
+      wordVector = namesGram[i]
+      #wi <- strsplit(wordVector, ' ')[[1]][[1]]
       wi_1 <- strsplit(wordVector, ' ')[[1]][[2]]
       wi_2 <- strsplit(wordVector, ' ')[[1]][[3]]
-      numOcurrencesAll <- length(grep(paste("\\<",wordVector,"\\>", sep = ''), searchOn))
-      numOcurrenceswi1wi2 <- length(grep(paste("\\<",wi_1,' ',wi_2,"\\>", sep = ''), searchOn))
+      wi1wi2 <- paste(wi_1,' ',wi_2, sep = '')
+      numOcurrencesAll <- count[[i]]
+      numOcurrenceswi1wi2 <- wordCountProbGram2[wordCountProbGram2$word == wi1wi2,]$ocurrencies
+      if (is.integer(numOcurrenceswi1wi2) == FALSE) {
+        numOcurrenceswi1wi2 = 0
+      }
       wordCountDF$probability[i] <- (numOcurrencesAll + 1) / (numOcurrenceswi1wi2 + V)
     }
     
@@ -115,14 +123,18 @@ gram1 <- TermDocumentMatrix(englishWordsVectorized, control = list(tokenize = nG
 gram2 <- TermDocumentMatrix(englishWordsVectorized, control = list(tokenize = nGramMaker2))
 gram3 <- TermDocumentMatrix(englishWordsVectorized, control = list(tokenize = nGramMaker3))
 
-gram1Filtered <- findFreqTerms(gram1,lowfreq = 1)
-gram2Filtered <- findFreqTerms(gram2,lowfreq = 1)
-gram3Filtered <- findFreqTerms(gram3,lowfreq = 1)
+#gram1Filtered <- findFreqTerms(gram1,lowfreq = 2)
+#gram2Filtered <- findFreqTerms(gram2,lowfreq = 2)
+#gram3Filtered <- findFreqTerms(gram3,lowfreq = 2)
+# removing not necessary variables
+remove(blog_us, news_us, twitter_us, englishWordsVectorized)
 
-wordCountProbGram1 <- wordCountVector(gram1Filtered, sampleEnglishOnly, gramNumber = 1, gramFull = gram1)
-wordCountProbGram2 <- wordCountVector(gram2Filtered, sampleEnglishOnly, gramNumber = 2, gramFull = gram2)
-wordCountProbGram3 <- wordCountVector(gram3Filtered, sampleEnglishOnly, gramNumber = 3, gramFull = gram3)
-
+wordCountProbGram1 <- wordCountVector(gramNumber = 1, gramFull = gram1)
+gc()
 save(wordCountProbGram1, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram1.RData")
+wordCountProbGram2 <- wordCountVector(gramNumber = 2, gramFull = gram2)
+gc()
 save(wordCountProbGram2, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram2.RData")
+#wordCountProbGram3 <- wordCountVector(gramNumber = 3, gramFull = gram3)
+gc()
 save(wordCountProbGram3, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram3.RData")
