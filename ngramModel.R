@@ -1,5 +1,5 @@
 ####################################################################################
-# OBJECTIVE:  Initial analysis on swiftkey data                                    #
+# OBJECTIVE:  NGRAM model swift key data                                           #
 # AUTHOR   :  Renato Pedroso Neto                                                  #
 # COMPANY  :  Coursera John Hopkins Capstone Project                               #
 # DATA     :  Can be downloaded at:                                                #
@@ -9,6 +9,7 @@
 library(tm)
 library(RWeka)
 library(dplyr)
+#library(sqldf)
 
 # remove punctuation, lower the words, remove numbers, remove whitespaces ...
 dealWithWords <- function(charInput){
@@ -73,7 +74,7 @@ wordCountVector<- function(gramNumber, gramFull){
       wi_1 <- strsplit(wordVector, ' ')[[1]][[2]]
       numOcurrencesAll <- count[[i]]
       numOcurrenceswi1 <- wordCountProbGram1[wordCountProbGram1$word == wi_1,]$ocurrencies
-      if (is.integer(numOcurrenceswi1) == FALSE) {
+      if (length(numOcurrenceswi1) == 0) {
         numOcurrenceswi1 = 0
       }
       wordCountDF$probability[i] <- (numOcurrencesAll + 1) / (numOcurrenceswi1 + V)
@@ -86,7 +87,7 @@ wordCountVector<- function(gramNumber, gramFull){
       wi1wi2 <- paste(wi_1,' ',wi_2, sep = '')
       numOcurrencesAll <- count[[i]]
       numOcurrenceswi1wi2 <- wordCountProbGram2[wordCountProbGram2$word == wi1wi2,]$ocurrencies
-      if (is.integer(numOcurrenceswi1wi2) == FALSE) {
+      if (length(numOcurrenceswi1wi2) == 0) {
         numOcurrenceswi1wi2 = 0
       }
       wordCountDF$probability[i] <- (numOcurrencesAll + 1) / (numOcurrenceswi1wi2 + V)
@@ -100,7 +101,7 @@ wordCountVector<- function(gramNumber, gramFull){
       wi1wi2wi3 <- paste(wi_1,' ',wi_2, ' ', wi_3, sep = '')
       numOcurrencesAll <- count[[i]]
       numOcurrenceswi1wi2wi3 <- wordCountProbGram3[wordCountProbGram3$word == wi1wi2wi3,]$ocurrencies
-      if (is.integer(numOcurrenceswi1wi2wi3) == FALSE) {
+      if (length(numOcurrenceswi1wi2wi3) == 0) {
         numOcurrenceswi1wi2wi3 = 0
       }
       wordCountDF$probability[i] <- (numOcurrencesAll + 1) / (numOcurrenceswi1wi2wi3 + V)
@@ -109,60 +110,27 @@ wordCountVector<- function(gramNumber, gramFull){
   return(wordCountDF)
 } 
 
-searchBestMatch <- function(searchValue, n = 1){
-  # this function receive a string to get the best match on the probabilities grams
-  # searchValue --> string of any size
-  # n           --> how many matches to return
-  # return      --> data frame with best match / matches
-  size <- length(strsplit(searchValue, ' ')[[1]])
-  toWord <- tail(strsplit(searchValue, ' ')[[1]], n = 3)
-  found <- 0
-  bestMatch = data.frame( word = character(n),
-                          ocurrencies = integer(n),
-                          probability = numeric(n),
-                          stringsAsFactors = FALSE)
-  if (size == 0){
-    for (i in 1:nrow(wordCountProbGram1)){
-      bestMatch <- wordCountProbGram1[1:n,]
-      break
-    }
+breakDF <- function(df){
+  # this function receive a df and break the columns. The first column will be the tail and the
+  # second column will be the predicted word
+  # df    --> any data frame. constructed to parse the prob data frame
+  # return      --> data frame with separated columns
+  size <- nrow(df)
+  for (i in 1:size){
+    brokenDf = data.frame( word = character(size),
+                           prediction = character(size),
+                           ocurrencies = integer(size),
+                           probability = numeric(size),
+                           stringsAsFactors = FALSE)
+    wordSize <- length(strsplit(df$word[i], ' ')[[1]])
+    brokenDf$word[i] <- strsplit(df$word[i], ' ')[[1]][1:(wordSize - 1)]
+    brokenDf$prediction[i] <- strsplit(df$word[i], ' ')[[1]][wordSize]
+    brokenDf$ocurrencies[i] <- df$ocurrencies[i]
+    brokenDf$probability[i] <- df$probability[i]
   }
-  if (size == 1){
-    for (i in 1:nrow(wordCountProbGram2)){
-      if (grepl(paste("^(", toWord, " )", sep = ''), wordCountProbGram2$word[i]) == TRUE){
-        found <- found + 1
-        bestMatch[found,] <- wordCountProbGram2[i,]
-        if (n <= found){
-          break
-        }
-      }
-    }
-  }
-  if (size == 2){
-    for (i in 1:nrow(wordCountProbGram3)){
-      if (grepl(paste("^(", toWord[1], ' ', toWord[2]," )", sep = ''), wordCountProbGram3$word[i]) == TRUE){
-        found <- found + 1
-        bestMatch[found,] <- wordCountProbGram3[i,]
-        if (n <= found){
-          break
-        }
-      }
-    }
-  }
-  if (size == 3){
-    for (i in 1:nrow(wordCountProbGram4)){
-      if (grepl(paste("^(", toWord[1], ' ', toWord[2], ' ' , toWord[3], " )", sep = ''), wordCountProbGram4$word[i]) == TRUE){
-        found <- found + 1
-        bestMatch[found,] <- wordCountProbGram4[i,]
-        if (n <= found){
-          break
-        }
-      }
-    }
-    
-  }
-  return(bestMatch)
+  return(brokenDf)
 }
+
 
 setwd("C:\\Users\\lc43922\\Coursera_Final_Project\\final")
 
@@ -220,26 +188,15 @@ save(wordCountProbGram3, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gra
 wordCountProbGram4 <- wordCountVector(gramNumber = 4, gramFull = gram4)
 wordCountProbGram4 <- arrange(wordCountProbGram4, desc(probability))
 gc()
-save(wordCountProbGram3, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram4.RData")
+save(wordCountProbGram4, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram4.RData")
 
-#start the finding algorithm
-# TODO put string in lower
-string <- tail(strsplit('day rise', ' ')[[1]], n = 3)
-string <- paste(string, collapse = ' ')
-bestMatch <- searchBestMatch(string, n = 3)
-# did it find something?
-if (bestMatch[1,2] == 0){
-  string <- tail(strsplit('day rise', ' ')[[1]], n = 2)
-  string <- paste(string, collapse = ' ')
-  bestMatch <- searchBestMatch(string, n = 3)
-}
-if (bestMatch[1,2] == 0){
-  string <- tail(strsplit('day rise', ' ')[[1]], n = 1)
-  string <- paste(string, collapse = ' ')
-  bestMatch <- searchBestMatch(string, n = 3)
-}
-if (bestMatch[1,2] == 0){
-  string <- tail(strsplit('day rise', ' ')[[1]], n = 0)
-  string <- paste(string, collapse = ' ')
-  bestMatch <- searchBestMatch(string, n = 3)
-}
+wordCountProbGram1Break <- wordCountProbGram1
+save(wordCountProbGram1Break, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram1Break.RData")
+wordCountProbGram2Break <- breakDF(wordCountProbGram2)
+save(wordCountProbGram2Break, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram2Break.RData")
+wordCountProbGram3Break <- breakDF(wordCountProbGram3)
+save(wordCountProbGram3Break, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram3Break.RData")
+wordCountProbGram4Break <- breakDF(wordCountProbGram4)
+save(wordCountProbGram4Break, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram4Break.RData")
+
+
