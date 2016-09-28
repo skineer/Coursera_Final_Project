@@ -10,6 +10,7 @@ library(tm)
 library(RWeka)
 library(dplyr)
 library(sqldf)
+library(data.table)
 
 # remove punctuation, lower the words, remove numbers, remove whitespaces ...
 dealWithWords <- function(charInput){
@@ -57,57 +58,58 @@ wordCountVector<- function(gramNumber, gramFull){
   V = gramFull$nrow
   count <- slam::row_sums(gramFull)
   namesGram <- names(count)
-  wordCountDF <- data.frame(word=character(V), 
-                            ocurrencies = integer(V),
-                            probability = numeric(V), stringsAsFactors = FALSE)
+  wordCountDT <- data.table(word=rep('_x', V), 
+                            ocurrencies = rep(0, V),
+                            probability = rep(0.0, V))
   for (i in 1:V){
     wordVector = namesGram[i]
-    wordCountDF$word[i] <- wordVector
     numOcurrences <- count[[i]]
-    wordCountDF$ocurrencies[i] <- numOcurrences
     if (gramNumber == 1){
-      wordCountDF$probability[i] <- wordCountDF$ocurrencies[i] / V
+      probability <- numOcurrences / V
+      set(wordCountDT, i, "word", wordVector)
+      set(wordCountDT, i, "ocurrencies", numOcurrences)
+      set(wordCountDT, i, "probability", probability)
     }
     if (gramNumber == 2){
-      wordVector = namesGram[i]
-      #wi <- strsplit(wordVector, ' ')[[1]][[1]]
       wi_1 <- strsplit(wordVector, ' ')[[1]][[2]]
-      numOcurrencesAll <- count[[i]]
-      numOcurrenceswi1 <- wordCountProbGram1[wordCountProbGram1$word == wi_1,]$ocurrencies
-      if (length(numOcurrenceswi1) == 0) {
+      numOcurrenceswi1 <- wordCountProbGram1[.(wi_1)]$ocurrencies
+      if (is.na(numOcurrenceswi1) == TRUE) {
         numOcurrenceswi1 = 0
       }
-      wordCountDF$probability[i] <- (numOcurrencesAll + 1) / (numOcurrenceswi1 + V)
+      probability <- (numOcurrences + 1) / (as.numeric(numOcurrenceswi1) + V)
+      set(wordCountDT, i, "word", wordVector)
+      set(wordCountDT, i, "ocurrencies", numOcurrences)
+      set(wordCountDT, i, "probability", probability)
     }
     if (gramNumber == 3){
-      wordVector = namesGram[i]
-      #wi <- strsplit(wordVector, ' ')[[1]][[1]]
       wi_1 <- strsplit(wordVector, ' ')[[1]][[2]]
       wi_2 <- strsplit(wordVector, ' ')[[1]][[3]]
       wi1wi2 <- paste(wi_1,' ',wi_2, sep = '')
-      numOcurrencesAll <- count[[i]]
-      numOcurrenceswi1wi2 <- wordCountProbGram2[wordCountProbGram2$word == wi1wi2,]$ocurrencies
-      if (length(numOcurrenceswi1wi2) == 0) {
+      numOcurrenceswi1wi2 <- wordCountProbGram2[.(wi1wi2)]$ocurrencies
+      if (is.na(numOcurrenceswi1wi2) == TRUE) {
         numOcurrenceswi1wi2 = 0
       }
-      wordCountDF$probability[i] <- (numOcurrencesAll + 1) / (numOcurrenceswi1wi2 + V)
+      probability <- (numOcurrences + 1) / (as.numeric(numOcurrenceswi1wi2) + V)
+      set(wordCountDT, i, "word", wordVector)
+      set(wordCountDT, i, "ocurrencies", numOcurrences)
+      set(wordCountDT, i, "probability", probability)
     }
     if (gramNumber == 4){
-      wordVector = namesGram[i]
-      #wi <- strsplit(wordVector, ' ')[[1]][[1]]
       wi_1 <- strsplit(wordVector, ' ')[[1]][[2]]
       wi_2 <- strsplit(wordVector, ' ')[[1]][[3]]
       wi_3 <- strsplit(wordVector, ' ')[[1]][[4]]
       wi1wi2wi3 <- paste(wi_1,' ',wi_2, ' ', wi_3, sep = '')
-      numOcurrencesAll <- count[[i]]
-      numOcurrenceswi1wi2wi3 <- wordCountProbGram3[wordCountProbGram3$word == wi1wi2wi3,]$ocurrencies
-      if (length(numOcurrenceswi1wi2wi3) == 0) {
+      numOcurrenceswi1wi2wi3 <- wordCountProbGram3[.(wi1wi2wi3)]$ocurrencies
+      if (is.na(numOcurrenceswi1wi2wi3) == TRUE) {
         numOcurrenceswi1wi2wi3 = 0
       }
-      wordCountDF$probability[i] <- (numOcurrencesAll + 1) / (numOcurrenceswi1wi2wi3 + V)
+      probability <- (numOcurrences + 1) / (as.numeric(numOcurrenceswi1wi2wi3) + V)
+      set(wordCountDT, i, "word", wordVector)
+      set(wordCountDT, i, "ocurrencies", numOcurrences)
+      set(wordCountDT, i, "probability", probability)
     }
   }
-  return(wordCountDF)
+  return(wordCountDT)
 } 
 
 setwd("C:\\Users\\lc43922\\Coursera_Final_Project\\final")
@@ -155,14 +157,27 @@ wordCountProbGram1 <- wordCountVector(gramNumber = 1, gramFull = gram1)
 wordCountProbGram1 <- arrange(wordCountProbGram1, desc(probability))
 gc()
 save(wordCountProbGram1, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram1.RData")
+
+#indexing for performance #####
+wordCountProbGram1 <- as.data.table(wordCountProbGram1)
+setkey(wordCountProbGram1, word)
+################################
 wordCountProbGram2 <- wordCountVector(gramNumber = 2, gramFull = gram2)
 wordCountProbGram2 <- arrange(wordCountProbGram2, desc(probability))
 gc()
 save(wordCountProbGram2, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram2.RData")
+#indexing for performance #####
+wordCountProbGram2 <- as.data.table(wordCountProbGram2)
+setkey(wordCountProbGram2, word)
+################################
 wordCountProbGram3 <- wordCountVector(gramNumber = 3, gramFull = gram3)
 wordCountProbGram3 <- arrange(wordCountProbGram3, desc(probability))
 gc()
 save(wordCountProbGram3, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram3.RData")
+#indexing for performance #####
+wordCountProbGram3 <- as.data.table(wordCountProbGram3)
+setkey(wordCountProbGram3, word)
+################################
 wordCountProbGram4 <- wordCountVector(gramNumber = 4, gramFull = gram4)
 wordCountProbGram4 <- arrange(wordCountProbGram4, desc(probability))
 gc()

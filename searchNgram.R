@@ -7,6 +7,7 @@
 
 library(data.table)
 library(dplyr)
+library(stringr)
 
 searchBestMatch <- function(searchValue, n = 1){
   # this function receive a string to get the best match on the probabilities grams
@@ -43,6 +44,36 @@ searchBestMatch <- function(searchValue, n = 1){
   return(bestMatch)
 }
 
+searchWrapper <- function(uiVariable, size = 1){
+  # this function receive a string, from shiny web app, and deal with the search
+  # in order to pass in all necessary ngrams
+  # uiVarible   --> string of any size
+  # size        --> how many values to retrieve on the search
+  # return      --> data frame with best match / matches
+  uiVariable <- trimws(str_replace_all(tolower(uiVariable),"[[:punct:]]"," "), which = "both")
+  string <- tail(strsplit(uiVariable, ' ')[[1]], n = 3)
+  string <- paste(string, collapse = ' ')
+  bestMatch <- searchBestMatch(string, n = size)
+  
+  # did it find something?
+  if (nrow(bestMatch) == 1 & is.na(bestMatch$prediction) == TRUE){
+    string <- tail(strsplit(uiVariable, ' ')[[1]], n = 2)
+    string <- paste(string, collapse = ' ')
+    bestMatch <- searchBestMatch(string, n = size)
+  }
+  if (nrow(bestMatch) == 1 & is.na(bestMatch$prediction) == TRUE){
+    string <- tail(strsplit(uiVariable, ' ')[[1]], n = 1)
+    string <- paste(string, collapse = ' ')
+    bestMatch <- searchBestMatch(string, n = size)
+  }
+  if (nrow(bestMatch) == 1 & is.na(bestMatch$prediction) == TRUE){
+    string <- tail(strsplit(uiVariable, ' ')[[1]], n = 0)
+    string <- paste(string, collapse = ' ')
+    bestMatch <- searchBestMatch(string, n = size)
+  }
+  return(bestMatch)
+}
+
 setwd("C:\\Users\\lc43922\\Coursera_Final_Project")
 load(file = 'gram1Break.RData')
 load(file = 'gram2Break.RData')
@@ -59,27 +90,6 @@ setkey(wordCountProbGram2Break, word)
 setkey(wordCountProbGram3Break, word)
 setkey(wordCountProbGram4Break, word)
 
-# This variable will come from the user interface
-uiVariable <- tolower('a a a a a a a a a a a a a acreage of')
-string <- tail(strsplit(uiVariable, ' ')[[1]], n = 3)
-string <- paste(string, collapse = ' ')
-bestMatch <- searchBestMatch(string)
-
-# did it find something?
-if (is.na(bestMatch$prediction) == TRUE){
-  string <- tail(strsplit(uiVariable, ' ')[[1]], n = 2)
-  string <- paste(string, collapse = ' ')
-  bestMatch <- searchBestMatch(string)
-}
-if (is.na(bestMatch$prediction) == TRUE){
-  string <- tail(strsplit(uiVariable, ' ')[[1]], n = 1)
-  string <- paste(string, collapse = ' ')
-  bestMatch <- searchBestMatch(string)
-}
-if (is.na(bestMatch$prediction) == TRUE){
-  string <- tail(strsplit(uiVariable, ' ')[[1]], n = 0)
-  string <- paste(string, collapse = ' ')
-  bestMatch <- searchBestMatch(string)
-}
+bestMatch <- searchWrapper('the', size = 10)
 bestMatch
 bestMatch$prediction
