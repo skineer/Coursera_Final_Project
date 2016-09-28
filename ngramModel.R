@@ -137,9 +137,9 @@ news_us <- iconv(news_us, "latin1", "ASCII", sub="")
 twitter_us <- iconv(twitter_us, "latin1", "ASCII", sub="")
 
 set.seed(999)
-sampleEnglishOnly <- c(sample(blog_us, length(blog_us) * 0.01),
-                       sample(news_us, length(news_us) * 0.01),
-                       sample(twitter_us, length(twitter_us) * 0.01))
+sampleEnglishOnly <- c(sample(blog_us, length(blog_us) * 0.1),
+                       sample(news_us, length(news_us) * 0.1),
+                       sample(twitter_us, length(twitter_us) * 0.1))
 
 englishWordsVectorized <- dealWithWords(sampleEnglishOnly)
 gram1 <- TermDocumentMatrix(englishWordsVectorized, control = list(tokenize = nGramMaker1))
@@ -203,6 +203,10 @@ wordCountProbGram4Break <- sqldf("SELECT substr(word, 1, length(word) - CHARINDE
                                  ocurrencies,
                                  probability
                                  from wordCountProbGram4")
+#indexing for performance #####
+wordCountProbGram4 <- as.data.table(wordCountProbGram4)
+setkey(wordCountProbGram4, word)
+################################
 save(wordCountProbGram4Break, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram4Break.RData")
 
 

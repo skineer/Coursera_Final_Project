@@ -56,17 +56,17 @@ searchWrapper <- function(uiVariable, size = 1){
   bestMatch <- searchBestMatch(string, n = size)
   
   # did it find something?
-  if (nrow(bestMatch) == 1 & is.na(bestMatch$prediction) == TRUE){
+  if (is.na(bestMatch$prediction[1]) == TRUE){
     string <- tail(strsplit(uiVariable, ' ')[[1]], n = 2)
     string <- paste(string, collapse = ' ')
     bestMatch <- searchBestMatch(string, n = size)
   }
-  if (nrow(bestMatch) == 1 & is.na(bestMatch$prediction) == TRUE){
+  if (is.na(bestMatch$prediction[1]) == TRUE){
     string <- tail(strsplit(uiVariable, ' ')[[1]], n = 1)
     string <- paste(string, collapse = ' ')
     bestMatch <- searchBestMatch(string, n = size)
   }
-  if (nrow(bestMatch) == 1 & is.na(bestMatch$prediction) == TRUE){
+  if (is.na(bestMatch$prediction[1]) == TRUE){
     string <- tail(strsplit(uiVariable, ' ')[[1]], n = 0)
     string <- paste(string, collapse = ' ')
     bestMatch <- searchBestMatch(string, n = size)
@@ -90,6 +90,6 @@ setkey(wordCountProbGram2Break, word)
 setkey(wordCountProbGram3Break, word)
 setkey(wordCountProbGram4Break, word)
 
-bestMatch <- searchWrapper('the', size = 10)
+bestMatch <- searchWrapper('mango', size = 10)
 bestMatch
 bestMatch$prediction
