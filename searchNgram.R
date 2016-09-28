@@ -6,6 +6,7 @@
 ####################################################################################
 
 library(data.table)
+library(dplyr)
 
 searchBestMatch <- function(searchValue, n = 1){
   # this function receive a string to get the best match on the probabilities grams
@@ -20,71 +21,65 @@ searchBestMatch <- function(searchValue, n = 1){
                           probability = numeric(n),
                           stringsAsFactors = FALSE)
   if (size == 0){
-    for (i in 1:nrow(wordCountProbGram1)){
-      bestMatch <- wordCountProbGram1[1:n,]
-      break
-    }
+    bestMatch <- arrange(wordCountProbGram1Break, desc(probability))[1:n,]
   }
   if (size == 1){
-    for (i in 1:nrow(wordCountProbGram2)){
-      if (grepl(paste("^(", toWord, " )", sep = ''), wordCountProbGram2$word[i]) == TRUE){
-        found <- found + 1
-        bestMatch[found,] <- wordCountProbGram2[i,]
-        if (n <= found){
-          break
-        }
-      }
-    }
+    parsedWordNGram2 <- strsplit(toWord, ' ')[[1]][1]
+    bestMatchAux <- wordCountProbGram2Break[.(parsedWordNGram2)]
+    bestMatch <- arrange(bestMatchAux, desc(probability))[1:n,]
   }
   if (size == 2){
-    for (i in 1:nrow(wordCountProbGram3)){
-      if (grepl(paste("^(", toWord[1], ' ', toWord[2]," )", sep = ''), wordCountProbGram3$word[i]) == TRUE){
-        found <- found + 1
-        bestMatch[found,] <- wordCountProbGram3[i,]
-        if (n <= found){
-          break
-        }
-      }
-    }
+    parsedWordNGram3 <- toWord[1:2]
+    parsedWordNGram3 <- paste(parsedWordNGram3, collapse = ' ')
+    bestMatchAux <- wordCountProbGram3Break[.(parsedWordNGram3)]
+    bestMatch <- arrange(bestMatchAux, desc(probability))[1:n,]
   }
   if (size == 3){
-    for (i in 1:nrow(wordCountProbGram4)){
-      if (grepl(paste("^(", toWord[1], ' ', toWord[2], ' ' , toWord[3], " )", sep = ''), wordCountProbGram4$word[i]) == TRUE){
-        found <- found + 1
-        bestMatch[found,] <- wordCountProbGram4[i,]
-        if (n <= found){
-          break
-        }
-      }
-    }
-    
+    parsedWordNGram4 <- toWord[1:3]
+    parsedWordNGram4 <- paste(parsedWordNGram4, collapse = ' ')
+    bestMatchAux <- wordCountProbGram4Break[.(parsedWordNGram4)]
+    bestMatch <- arrange(bestMatchAux, desc(probability))[1:n,]
   }
   return(bestMatch)
 }
 
 setwd("C:\\Users\\lc43922\\Coursera_Final_Project")
 load(file = 'gram1Break.RData')
-load(file = 'gram2.RData')
-load(file = 'gram3.RData')
+load(file = 'gram2Break.RData')
+load(file = 'gram3Break.RData')
 load(file = 'gram4Break.RData')
 
-#start the finding algorithm
-string <- tail(strsplit('this is', ' ')[[1]], n = 3)
+#transform all the DF to DT asn set the key for fast retrieve of values
+wordCountProbGram1Break <- as.data.table(wordCountProbGram1Break)
+wordCountProbGram2Break <- as.data.table(wordCountProbGram2Break)
+wordCountProbGram3Break <- as.data.table(wordCountProbGram3Break)
+wordCountProbGram4Break <- as.data.table(wordCountProbGram4Break)
+setkey(wordCountProbGram1Break, word)
+setkey(wordCountProbGram2Break, word)
+setkey(wordCountProbGram3Break, word)
+setkey(wordCountProbGram4Break, word)
+
+# This variable will come from the user interface
+uiVariable <- tolower('a a a a a a a a a a a a a acreage of')
+string <- tail(strsplit(uiVariable, ' ')[[1]], n = 3)
 string <- paste(string, collapse = ' ')
 bestMatch <- searchBestMatch(string)
+
 # did it find something?
-if (bestMatch[1,2] == 0){
-  string <- tail(strsplit(tolower('this is sparta this'), ' ')[[1]], n = 2)
+if (is.na(bestMatch$prediction) == TRUE){
+  string <- tail(strsplit(uiVariable, ' ')[[1]], n = 2)
   string <- paste(string, collapse = ' ')
-  bestMatch <- searchBestMatch(string, n = 3)
+  bestMatch <- searchBestMatch(string)
 }
-if (bestMatch[1,2] == 0){
-  string <- tail(strsplit(tolower('this is sparta this'), ' ')[[1]], n = 1)
+if (is.na(bestMatch$prediction) == TRUE){
+  string <- tail(strsplit(uiVariable, ' ')[[1]], n = 1)
   string <- paste(string, collapse = ' ')
-  bestMatch <- searchBestMatch(string, n = 3)
+  bestMatch <- searchBestMatch(string)
 }
-if (bestMatch[1,2] == 0){
-  string <- tail(strsplit(tolower('this is sparta this'), ' ')[[1]], n = 0)
+if (is.na(bestMatch$prediction) == TRUE){
+  string <- tail(strsplit(uiVariable, ' ')[[1]], n = 0)
   string <- paste(string, collapse = ' ')
-  bestMatch <- searchBestMatch(string, n = 3)
+  bestMatch <- searchBestMatch(string)
 }
+bestMatch
+bestMatch$prediction

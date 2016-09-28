@@ -9,7 +9,7 @@
 library(tm)
 library(RWeka)
 library(dplyr)
-#library(sqldf)
+library(sqldf)
 
 # remove punctuation, lower the words, remove numbers, remove whitespaces ...
 dealWithWords <- function(charInput){
@@ -110,28 +110,6 @@ wordCountVector<- function(gramNumber, gramFull){
   return(wordCountDF)
 } 
 
-breakDF <- function(df){
-  # this function receive a df and break the columns. The first column will be the tail and the
-  # second column will be the predicted word
-  # df    --> any data frame. constructed to parse the prob data frame
-  # return      --> data frame with separated columns
-  size <- nrow(df)
-  for (i in 1:size){
-    brokenDf = data.frame( word = character(size),
-                           prediction = character(size),
-                           ocurrencies = integer(size),
-                           probability = numeric(size),
-                           stringsAsFactors = FALSE)
-    wordSize <- length(strsplit(df$word[i], ' ')[[1]])
-    brokenDf$word[i] <- strsplit(df$word[i], ' ')[[1]][1:(wordSize - 1)]
-    brokenDf$prediction[i] <- strsplit(df$word[i], ' ')[[1]][wordSize]
-    brokenDf$ocurrencies[i] <- df$ocurrencies[i]
-    brokenDf$probability[i] <- df$probability[i]
-  }
-  return(brokenDf)
-}
-
-
 setwd("C:\\Users\\lc43922\\Coursera_Final_Project\\final")
 
 # load all languages blogs sentences:
@@ -191,12 +169,25 @@ gc()
 save(wordCountProbGram4, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram4.RData")
 
 wordCountProbGram1Break <- wordCountProbGram1
+wordCountProbGram1Break <- sqldf("select word, '' as prediction, ocurrencies, probability from wordCountProbGram1Break")
 save(wordCountProbGram1Break, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram1Break.RData")
-wordCountProbGram2Break <- breakDF(wordCountProbGram2)
+wordCountProbGram2Break <- sqldf("select trim(substr(word, 1, charindex(' ', word))) as word, 
+                                 trim(substr(word, charindex(' ', word), length(word))) as prediction,
+                                 ocurrencies,
+                                 probability
+                                 from wordCountProbGram2")
 save(wordCountProbGram2Break, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram2Break.RData")
-wordCountProbGram3Break <- breakDF(wordCountProbGram3)
+wordCountProbGram3Break <- sqldf("select trim(substr(word, 1, charindex(' ', word, charindex(' ', word) + 1))) as word, 
+                                trim(substr(word, charindex(' ', word, charindex(' ', word) + 1), length(word))) as prediction,
+                                 ocurrencies,
+                                 probability
+                                 from wordCountProbGram3")
 save(wordCountProbGram3Break, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram3Break.RData")
-wordCountProbGram4Break <- breakDF(wordCountProbGram4)
+wordCountProbGram4Break <- sqldf("SELECT substr(word, 1, length(word) - CHARINDEX(' ', REVERSE(word))) as word,
+                                 REVERSE(substr(REVERSE(word), 1, CHARINDEX(' ', REVERSE(word)) - 1)) as prediction,
+                                 ocurrencies,
+                                 probability
+                                 from wordCountProbGram4")
 save(wordCountProbGram4Break, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram4Break.RData")
 
 
