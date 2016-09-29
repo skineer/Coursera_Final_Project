@@ -74,11 +74,10 @@ searchWrapper <- function(uiVariable, size = 1){
   return(bestMatch)
 }
 
-setwd("C:\\Users\\lc43922\\Coursera_Final_Project")
-load(file = 'gram1Break.RData')
-load(file = 'gram2Break.RData')
-load(file = 'gram3Break.RData')
-load(file = 'gram4Break.RData')
+load(file = '../gram1Break.RData')
+load(file = '../gram2Break.RData')
+load(file = '../gram3Break.RData')
+load(file = '../gram4Break.RData')
 
 #transform all the DF to DT asn set the key for fast retrieve of values
 wordCountProbGram1Break <- as.data.table(wordCountProbGram1Break)
@@ -89,7 +88,8 @@ setkey(wordCountProbGram1Break, word)
 setkey(wordCountProbGram2Break, word)
 setkey(wordCountProbGram3Break, word)
 setkey(wordCountProbGram4Break, word)
-
-bestMatch <- searchWrapper("lea", size = 10)
-bestMatch
-bestMatch$prediction
+shinyServer(
+    function(input, output){
+        output$prediction <- reactive({searchWrapper(input$userWords)$prediction})
+    }
+)
