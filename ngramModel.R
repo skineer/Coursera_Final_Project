@@ -137,9 +137,9 @@ news_us <- iconv(news_us, "latin1", "ASCII", sub="")
 twitter_us <- iconv(twitter_us, "latin1", "ASCII", sub="")
 
 set.seed(999)
-sampleEnglishOnly <- c(sample(blog_us, length(blog_us) * 0.1),
-                       sample(news_us, length(news_us) * 0.1),
-                       sample(twitter_us, length(twitter_us) * 0.1))
+sampleEnglishOnly <- c(sample(blog_us, length(blog_us) * 0.02),
+                       sample(news_us, length(news_us) * 0.02),
+                       sample(twitter_us, length(twitter_us) * 0.02))
 
 englishWordsVectorized <- dealWithWords(sampleEnglishOnly)
 gram1 <- TermDocumentMatrix(englishWordsVectorized, control = list(tokenize = nGramMaker1))
@@ -156,7 +156,7 @@ remove(blog_us, news_us, twitter_us, englishWordsVectorized)
 wordCountProbGram1 <- wordCountVector(gramNumber = 1, gramFull = gram1)
 wordCountProbGram1 <- arrange(wordCountProbGram1, desc(probability))
 gc()
-save(wordCountProbGram1, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram1.RData")
+save(wordCountProbGram1, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\ShinyApp\\gram1.RData")
 
 #indexing for performance #####
 wordCountProbGram1 <- as.data.table(wordCountProbGram1)
@@ -165,7 +165,7 @@ setkey(wordCountProbGram1, word)
 wordCountProbGram2 <- wordCountVector(gramNumber = 2, gramFull = gram2)
 wordCountProbGram2 <- arrange(wordCountProbGram2, desc(probability))
 gc()
-save(wordCountProbGram2, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram2.RData")
+save(wordCountProbGram2, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\ShinyApp\\gram2.RData")
 #indexing for performance #####
 wordCountProbGram2 <- as.data.table(wordCountProbGram2)
 setkey(wordCountProbGram2, word)
@@ -173,7 +173,7 @@ setkey(wordCountProbGram2, word)
 wordCountProbGram3 <- wordCountVector(gramNumber = 3, gramFull = gram3)
 wordCountProbGram3 <- arrange(wordCountProbGram3, desc(probability))
 gc()
-save(wordCountProbGram3, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram3.RData")
+save(wordCountProbGram3, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\ShinyApp\\gram3.RData")
 #indexing for performance #####
 wordCountProbGram3 <- as.data.table(wordCountProbGram3)
 setkey(wordCountProbGram3, word)
@@ -181,23 +181,23 @@ setkey(wordCountProbGram3, word)
 wordCountProbGram4 <- wordCountVector(gramNumber = 4, gramFull = gram4)
 wordCountProbGram4 <- arrange(wordCountProbGram4, desc(probability))
 gc()
-save(wordCountProbGram4, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram4.RData")
+save(wordCountProbGram4, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\ShinyApp\\gram4.RData")
 
 wordCountProbGram1Break <- wordCountProbGram1
 wordCountProbGram1Break <- sqldf("select word, '' as prediction, ocurrencies, probability from wordCountProbGram1Break")
-save(wordCountProbGram1Break, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram1Break.RData")
+save(wordCountProbGram1Break, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\ShinyApp\\gram1Break.RData")
 wordCountProbGram2Break <- sqldf("select trim(substr(word, 1, charindex(' ', word))) as word, 
                                  trim(substr(word, charindex(' ', word), length(word))) as prediction,
                                  ocurrencies,
                                  probability
                                  from wordCountProbGram2")
-save(wordCountProbGram2Break, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram2Break.RData")
+save(wordCountProbGram2Break, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\ShinyApp\\gram2Break.RData")
 wordCountProbGram3Break <- sqldf("select trim(substr(word, 1, charindex(' ', word, charindex(' ', word) + 1))) as word, 
                                 trim(substr(word, charindex(' ', word, charindex(' ', word) + 1), length(word))) as prediction,
                                  ocurrencies,
                                  probability
                                  from wordCountProbGram3")
-save(wordCountProbGram3Break, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram3Break.RData")
+save(wordCountProbGram3Break, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\ShinyApp\\gram3Break.RData")
 wordCountProbGram4Break <- sqldf("SELECT substr(word, 1, length(word) - CHARINDEX(' ', REVERSE(word))) as word,
                                  REVERSE(substr(REVERSE(word), 1, CHARINDEX(' ', REVERSE(word)) - 1)) as prediction,
                                  ocurrencies,
@@ -207,6 +207,6 @@ wordCountProbGram4Break <- sqldf("SELECT substr(word, 1, length(word) - CHARINDE
 wordCountProbGram4 <- as.data.table(wordCountProbGram4)
 setkey(wordCountProbGram4, word)
 ################################
-save(wordCountProbGram4Break, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\gram4Break.RData")
+save(wordCountProbGram4Break, file = "C:\\Users\\lc43922\\Coursera_Final_Project\\ShinyApp\\gram4Break.RData")
 
 

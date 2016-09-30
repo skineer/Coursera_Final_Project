@@ -50,6 +50,10 @@ searchWrapper <- function(uiVariable, size = 1){
   # uiVarible   --> string of any size
   # size        --> how many values to retrieve on the search
   # return      --> data frame with best match / matches
+  if (cont == 0){
+    init()
+    cont <<- cont + 1
+  }
   uiVariable <- trimws(str_replace_all(tolower(uiVariable),"[[:punct:]]"," "), which = "both")
   string <- tail(strsplit(uiVariable, ' ')[[1]], n = 3)
   string <- paste(string, collapse = ' ')
@@ -74,22 +78,40 @@ searchWrapper <- function(uiVariable, size = 1){
   return(bestMatch)
 }
 
-load(file = '../gram1Break.RData')
-load(file = '../gram2Break.RData')
-load(file = '../gram3Break.RData')
-load(file = '../gram4Break.RData')
+init <- function(){
+  load(file = 'gram1Break.RData')
+  load(file = 'gram2Break.RData')
+  load(file = 'gram3Break.RData')
+  load(file = 'gram4Break.RData')
+  
+  #transform all the DF to DT asn set the key for fast retrieve of values
+  wordCountProbGram1Break <- as.data.table(wordCountProbGram1Break)
+  wordCountProbGram2Break <- as.data.table(wordCountProbGram2Break)
+  wordCountProbGram3Break <- as.data.table(wordCountProbGram3Break)
+  wordCountProbGram4Break <- as.data.table(wordCountProbGram4Break)
+  setkey(wordCountProbGram1Break, word)
+  setkey(wordCountProbGram2Break, word)
+  setkey(wordCountProbGram3Break, word)
+  setkey(wordCountProbGram4Break, word)
+  wordCountProbGram1Break <<- wordCountProbGram1Break
+  wordCountProbGram2Break <<- wordCountProbGram2Break
+  wordCountProbGram3Break <<- wordCountProbGram3Break
+  wordCountProbGram4Break <<- wordCountProbGram4Break
+}
 
-#transform all the DF to DT asn set the key for fast retrieve of values
-wordCountProbGram1Break <- as.data.table(wordCountProbGram1Break)
-wordCountProbGram2Break <- as.data.table(wordCountProbGram2Break)
-wordCountProbGram3Break <- as.data.table(wordCountProbGram3Break)
-wordCountProbGram4Break <- as.data.table(wordCountProbGram4Break)
-setkey(wordCountProbGram1Break, word)
-setkey(wordCountProbGram2Break, word)
-setkey(wordCountProbGram3Break, word)
-setkey(wordCountProbGram4Break, word)
 shinyServer(
-    function(input, output){
-        output$prediction <- reactive({searchWrapper(input$userWords)$prediction})
-    }
+  function(input, output, session){
+    cont <<- 0
+    output$prediction <- reactive({
+      searchWrapper(input$userWords)$prediction
+    })
+    
+    output$predictionTable = renderDataTable(
+      options = list(searching = FALSE, paging=FALSE, bInfo=FALSE), 
+      searchWrapper(input$userWords, size = input$numPredicted)
+    )
+    print(paste('TOTAL COUNTS: ', cont))
+
+  }
+  
 )

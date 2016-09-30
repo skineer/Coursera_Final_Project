@@ -1,15 +1,15 @@
 ### Description  
-This app was made to calculate the probability of death in the current day based on your life style. This probability is totally invented by the author and doesn't have ANY cientific study to support it. Please don't consider to see real values in this application.  
+This app was made to show the most probable next word according to the trainning dataset.  
+The dataset, used to train the NGRAM model, is from SwiftKey. You can download the data (here)[https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip]
 
-### Input Data    
-There are three inputs that must be made:  
-1) Age: Insert your age. The age must be between 18 and 100.  
-2) Cigarrets smoked per day: Insert the number of cigarretes you smoke per day, if you are a non smoker just insert 0 (default value). The values must be between 0 and 100.  
-3) Days of exercise per week: Insert the number of days that you do exercises per week. The default value is 0 and this text box must contain values between 0 and 7.  
+### Metodology   
+This model was made in order to complete the data science specialization provided by John Hopkins trough Coursera. More information about the data science specialization can be found (here)[https://en.coursera.org/specializations/jhu-data-science]  
+The model is a simple (NGRAM)[https://en.wikipedia.org/wiki/N-gram], from level 1 to level 4, that calculates the probabilities, and conditional probabilities too, using (Katz Backoff Strategy)[https://en.wikipedia.org/wiki/Katz%27s_back-off_model] and (Add-1 smooth - LAPLACE)[https://en.wikipedia.org/wiki/Additive_smoothing]
 
-### Output  
-On the output you will see the probability of death in that day or a error message if you entered wrong values.  
+### How to use  
+Type any english word, in the indicated place, and check the most probable word, considering the context that the user inserted.  
+The user can manage how many words he/she wants to see, to do so slide the bar and change the values from 1 to 10.  
 
-### Formula to calculate the probability  
-The probability, invented by the author, is calculated using the formula:  
-(age / 800) + (smoke / 600) - (exercise / 400)  
+### More information  
+The full code can be found (here)[https://github.com/skineer/Coursera_Final_Project]  
+The code was constructed by Renato Pedroso in Sep, 30th - 2016  
